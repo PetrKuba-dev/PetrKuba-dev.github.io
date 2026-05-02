@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
 import { ArrowDownRight } from 'lucide-react';
 
+import HomeStickyKicker from '../components/HomeStickyKicker';
 import { heroAside, person, siteIntro } from '../data/homeContent';
 
 function randomBetween(min, max) {
@@ -84,83 +85,85 @@ const fadeUp = {
 
 export default function Hero() {
   return (
-    <section
-      className="relative overflow-hidden px-4 pt-14 pb-20 sm:px-6 md:px-10 md:pt-20 md:pb-28"
-      aria-labelledby="hero-heading"
-    >
-      <div className="pointer-events-none absolute -left-28 top-8 h-72 w-72 rounded-full bg-accent/15 blur-3xl" />
-      <div className="pointer-events-none absolute -right-12 top-24 h-56 w-56 rounded-full bg-paper-deep blur-2xl" />
-      <div className="pointer-events-none absolute bottom-0 left-1/3 h-40 w-40 rounded-full bg-accent-soft/30 blur-2xl" />
+    <section className="hp-hero-pad relative" aria-labelledby="hero-heading">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        <div className="absolute -left-28 top-8 h-72 w-72 rounded-full bg-accent/15 blur-3xl" />
+        <div className="absolute -right-12 top-24 h-56 w-56 rounded-full bg-paper-deep blur-2xl" />
+        <div className="absolute bottom-0 left-1/3 h-40 w-40 rounded-full bg-accent-soft/30 blur-2xl" />
+      </div>
 
-      <div className="relative mx-auto max-w-6xl">
-        <motion.p
-          custom={0}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="mb-4 max-w-xl font-sans text-sm tracking-[0.14em] text-muted uppercase"
-        >
-          {person.fullName} — portfolio
-        </motion.p>
+      <HomeStickyKicker
+        motionProps={{
+          custom: 0,
+          variants: fadeUp,
+          initial: 'hidden',
+          animate: 'visible',
+        }}
+      >
+        {person.fullName} — portfolio
+      </HomeStickyKicker>
 
+      <div className="relative z-10 mx-auto max-w-6xl">
         <div className="grid gap-10 lg:grid-cols-[1fr_minmax(0,280px)] lg:items-end lg:gap-16">
-          <div>
+          <div className="relative z-10">
             <motion.h1
               id="hero-heading"
               custom={1}
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className="font-serif text-5xl font-semibold leading-[1.05] tracking-tight text-ink sm:text-6xl md:text-7xl"
+              className="font-sans text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-ink sm:text-5xl sm:leading-[1.04] md:text-6xl md:leading-[1.03] lg:text-7xl lg:leading-[1.02]"
             >
               <span className="block">{person.firstName}</span>
               <span className="mt-1 block sm:mt-2">{person.lastName}</span>
             </motion.h1>
-            <TypewriterLine
-              text={siteIntro.roleLine}
-              className="mt-7 max-w-xl font-sans text-xl leading-relaxed text-ink sm:text-2xl"
-            />
-            <motion.p
-              custom={3}
+            <motion.div
+              custom={2}
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className="mt-6 max-w-2xl font-sans text-base leading-relaxed text-muted md:text-lg"
+              className="hp-hero-role-shell relative z-10 mt-8 sm:mt-9"
+            >
+              <span className="hp-hero-prompt" aria-hidden>
+                ~
+              </span>
+              <TypewriterLine text={siteIntro.roleLine} className="hp-hero-role-line relative" />
+            </motion.div>
+            <motion.p
+              custom={4}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="site-body site-prose-measure mt-6 sm:mt-7"
             >
               {siteIntro.lead}
             </motion.p>
 
             <motion.div
-              custom={4}
+              custom={5}
               variants={fadeUp}
               initial="hidden"
               animate="visible"
               className="mt-10 flex flex-wrap items-center gap-4"
             >
-              <NavLink
-                to="/work"
-                className="inline-flex items-center gap-2 rounded-soft bg-ink px-5 py-3 font-sans text-sm font-medium text-paper transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-              >
+              <NavLink to="/work" className="site-btn-primary">
                 Selected work
-                <ArrowDownRight className="h-4 w-4" aria-hidden />
+                <ArrowDownRight className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
               </NavLink>
-              <a
-                href="#selected-work"
-                className="inline-flex items-center gap-2 border-b border-ink/25 pb-0.5 font-sans text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
-              >
+              <a href="#selected-work" className="site-text-link-subtle">
                 Jump to highlights
               </a>
             </motion.div>
           </div>
 
           <motion.aside
-            custom={2}
+            custom={3}
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="border-l border-border pl-6 lg:pb-2"
+            className="relative z-10 border-l border-border-default pl-6 lg:ml-2 lg:pb-1 lg:pl-8"
           >
-            <p className="font-serif text-lg font-normal leading-snug text-ink">{heroAside.quote}</p>
+            <p className="font-sans text-lg font-normal leading-snug text-ink">{heroAside.quote}</p>
             <p className="mt-4 font-sans text-sm leading-relaxed text-muted">{heroAside.sub}</p>
           </motion.aside>
         </div>

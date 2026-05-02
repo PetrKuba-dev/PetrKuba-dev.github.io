@@ -6,12 +6,19 @@ export default function Layout() {
 
   return (
     <AnimatePresence mode="wait">
+      {/*
+        Sticky positioning is relative to the scrollport until any ancestor gets
+        `transform` / `filter` / `perspective`. Framer Motion implements `x` with
+        `transform`, which breaks `position: sticky` site-wide (homepage kickers).
+        Keep route transitions opacity-only.
+      */}
       <motion.div
         key={location.pathname}
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -50 }}
-        transition={{ duration: 0.5 }}
+        className="site-shell min-h-full w-full"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       >
         <Outlet />
       </motion.div>

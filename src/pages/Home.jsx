@@ -5,11 +5,11 @@ import ContactCTA from '../hp_sections/ContactCTA';
 
 export default function Home() {
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <Hero />
       <SelectedWork />
       <About />
       <ContactCTA />
-    </>
+    </div>
   );
 }

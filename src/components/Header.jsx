@@ -27,7 +27,7 @@ export default function Header() {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className="sticky top-0 z-50 border-b border-border bg-paper/90 backdrop-blur-md"
+      className="sticky md:relative top-0 z-50 border-b border-border-subtle bg-paper/90 backdrop-blur-md"
     >
       <div className="px-4 py-4 sm:px-6 md:px-10">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-6">
@@ -36,7 +36,7 @@ export default function Header() {
             className="group flex min-w-0 flex-shrink-0 flex-col gap-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent rounded-soft"
             onClick={() => setMobileOpen(false)}
           >
-            <span className="font-sans text-[10px] font-medium uppercase tracking-[0.18em] text-muted">
+            <span className="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-muted">
               Portfolio
             </span>
             <span className="font-sans text-lg font-semibold tracking-tight text-ink transition-colors group-hover:text-accent">
@@ -103,7 +103,7 @@ export default function Header() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden border-t border-border bg-paper-deep/60 sm:hidden"
+            className="overflow-hidden border-t border-border-subtle bg-paper-deep/60 sm:hidden"
           >
             <nav
               className="flex flex-col px-4 pb-5 pt-2"

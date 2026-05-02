@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 
+import HomeStickyKicker from '../components/HomeStickyKicker';
+import WorkCardPreview from '../components/WorkCardPreview';
 import { featuredWork, selectedWorkIntro } from '../data/homeContent';
 
 const container = {
@@ -25,72 +27,78 @@ export default function SelectedWork() {
   return (
     <section
       id="selected-work"
-      className="scroll-mt-24 border-t border-border bg-paper-deep/40 px-4 py-20 sm:px-6 md:px-10 md:py-28"
+      className="hp-section-selected-work hp-section-pad scroll-mt-24"
       aria-labelledby="selected-work-heading"
     >
+      <HomeStickyKicker>{selectedWorkIntro.kicker}</HomeStickyKicker>
+
       <div className="mx-auto max-w-6xl">
-        <div className="mb-14 max-w-2xl md:mb-16">
-          <p className="font-sans text-sm tracking-[0.14em] text-muted uppercase">
-            {selectedWorkIntro.kicker}
-          </p>
-          <h2 id="selected-work-heading" className="mt-3 font-serif text-4xl text-ink md:text-5xl">
+        <div className="mb-12 max-w-2xl md:mb-14 lg:max-w-[42rem]">
+          <h2
+            id="selected-work-heading"
+            className="site-section-title mt-0 text-3xl sm:mt-1 sm:text-4xl md:text-5xl"
+          >
             {selectedWorkIntro.title}
           </h2>
-          <p className="mt-4 max-w-xl font-sans text-muted">{selectedWorkIntro.description}</p>
+          <p className="site-body site-prose-measure mt-5 text-ink/90">{selectedWorkIntro.description}</p>
         </div>
 
         <motion.ul
-          className="flex flex-col gap-6 md:gap-8"
+          className="flex flex-col gap-8 md:gap-10"
           variants={container}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-60px' }}
         >
           {featuredWork.map((project, index) => (
-            <motion.li key={project.id} variants={item}>
+            <motion.li
+              key={project.id}
+              variants={item}
+              className={index % 2 === 0 ? 'md:mr-4 lg:mr-10' : 'md:ml-4 lg:ml-8'}
+            >
               <NavLink
                 to={project.href}
-                className={`group flex flex-col gap-4 rounded-soft border border-border bg-paper p-6 transition-[border-color,box-shadow] hover:border-accent/45 hover:shadow-[0_12px_40px_-12px_rgb(42_38_36_/_0.12)] md:flex-row md:items-start md:justify-between md:gap-10 md:p-8 ${
-                  index === 0 ? 'md:min-h-[11rem]' : ''
-                }`}
+                className={`group site-work-card ${index === 0 ? 'md:min-h-[11rem]' : ''}`}
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-4 md:block">
-                    <h3 className="font-serif text-2xl text-ink transition-colors group-hover:text-accent md:text-3xl">
-                      {project.title}
-                    </h3>
-                    <ArrowUpRight
-                      className="h-5 w-5 shrink-0 text-muted transition-colors group-hover:text-accent md:hidden"
-                      aria-hidden
-                    />
-                  </div>
-                  <p className="mt-3 font-sans text-base leading-relaxed text-muted md:max-w-xl">
-                    {project.description}
-                  </p>
-                  <ul className="mt-5 flex flex-wrap gap-2">
-                    {project.tags.map((tag) => (
-                      <li key={tag}>
-                        <span className="inline-block rounded-full border border-border bg-paper-deep/90 px-3 py-1 font-sans text-xs text-ink">
-                          {tag}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="w-full shrink-0 md:w-[min(280px,34%)] md:max-w-[280px]">
+                  <WorkCardPreview variant={index} title={project.title} />
                 </div>
-                <ArrowUpRight
-                  className="hidden h-6 w-6 shrink-0 text-muted transition-colors group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-accent md:block"
-                  aria-hidden
-                />
+                <div className="flex min-w-0 flex-1 flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-8">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-4 md:block">
+                      <h3 className="font-sans text-xl font-semibold tracking-tight text-ink transition-colors duration-200 group-hover:text-accent sm:text-2xl md:text-3xl">
+                        {project.title}
+                      </h3>
+                      <ArrowUpRight
+                        className="h-5 w-5 shrink-0 text-muted transition-colors duration-200 group-hover:text-accent md:hidden"
+                        strokeWidth={2}
+                        aria-hidden
+                      />
+                    </div>
+                    <p className="site-body site-prose-measure mt-2 md:mt-3">{project.description}</p>
+                    <ul className="mt-5 flex flex-wrap gap-2 md:mt-6">
+                      {project.tags.map((tag) => (
+                        <li key={tag}>
+                          <span className="site-work-tag group-hover:bg-accent">
+                            {tag}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <ArrowUpRight
+                    className="hidden h-6 w-6 shrink-0 self-start text-muted transition-colors duration-200 group-hover:text-accent md:mt-1 md:block"
+                    strokeWidth={2}
+                    aria-hidden
+                  />
+                </div>
               </NavLink>
             </motion.li>
           ))}
         </motion.ul>
 
-        <p className="mt-10 text-center font-sans text-sm text-muted md:text-left">
-          <NavLink
-            to="/work"
-            className="border-b border-accent/40 font-medium text-ink transition-colors hover:border-accent hover:text-accent"
-          >
+        <p className="mt-12 text-center font-sans text-sm text-muted md:mt-14 md:text-left">
+          <NavLink to="/work" className="site-text-link">
             Full list on the work page
           </NavLink>
         </p>

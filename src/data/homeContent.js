@@ -48,3 +48,9 @@ export const aboutSnippetAside = {
     'Same thread whether it’s a repo, a frame in Figma, or a diagram on a whiteboard: make the idea legible.',
   sub: 'This site is front-end only for now; deeper write-ups per project are on the way.',
 };
+
+/** Short mono key/value rows in the about aside — reads as a “spec strip” */
+export const aboutSnippetFacts = [
+  { key: 'Focus', value: 'Interfaces, tooling, visual explanations' },
+  { key: 'Stack', value: 'React, TypeScript, Node' },
+];
