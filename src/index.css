@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@theme {
+  /* Warm paper / ink — grounded, slightly earthy (Petr Kuba portfolio) */
+  --color-paper: #f6f3ed;
+  --color-paper-deep: #ebe4da;
+  --color-ink: #1f1c1a;
+  --color-muted: #5c5753;
+  --color-accent: #9c4428;
+  --color-accent-soft: #dfc9bd;
+  --color-border: #ddd4c9;
+
+  /* Space Grotesk: display (font-serif) + UI/body (font-sans) — same stack, two utilities */
+  --font-serif:
+    "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans:
+    "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --radius-soft: 0.625rem;
+
+  --shadow-header: 0 1px 0 rgb(42 38 36 / 0.06), 0 8px 24px rgb(42 38 36 / 0.04);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    line-height: 1.6;
+    font-weight: 400;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    @apply bg-paper text-ink antialiased;
+  }
+
+  body {
+    @apply m-0 min-h-screen min-w-[320px] font-sans text-ink bg-paper;
+  }
+
+  #root {
+    @apply w-full min-h-screen overflow-x-hidden bg-paper;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-serif font-medium tracking-tight text-ink;
+  }
+
+  h1 {
+    @apply text-4xl sm:text-5xl leading-tight;
+  }
+
+  h2 {
+    @apply text-3xl sm:text-4xl leading-snug;
+  }
+
+  h3 {
+    @apply text-2xl sm:text-3xl leading-snug;
+  }
+
+  ::selection {
+    @apply bg-accent-soft text-ink;
+  }
+}
