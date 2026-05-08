@@ -1,5 +1,3 @@
-import { workProjects } from './workProjects';
-
 /** Homepage — Petr Kuba. Edit projects and links as you ship real case studies. */
 
 export const person = {
@@ -21,26 +19,87 @@ export const heroAside = {
   sub: 'No agency polish — just work that reflects how I think and what I like to make.',
 };
 
-/** First three entries from `workProjects` — homepage “Selected work” strip */
-export const featuredWork = workProjects.slice(0, 3).map((p) => ({
-  id: p.id,
-  title: p.title,
-  description: p.description,
-  tags: p.tags,
-  href: '/work',
-}));
-
 export const shortAbout = [
   'I’m most alive when a problem needs both sides: tight code and a layout that actually explains something.',
   'Most things I publish started ugly — notebooks, rough prototypes, and a lot of throwing things away.',
   'If that sounds familiar, we probably care about the same kind of craft.',
 ];
 
+/** Hub node: visual entry — spokes run from here to each topic block. */
+export const thinkingMapEntry = {
+  id: 'entry',
+  title: 'Start here',
+  line: 'Craft, curiosity, and shipping small things that add up.',
+};
+
+/**
+ * Homepage — thinking map nodes (cluster layout on the section).
+ * `connectsTo`: related nodes for subtle link hints (undirected edges, deduped when rendering).
+ * `tech`: tools / stack hints for that area.
+ */
+export const thinkingBlocks = [
+  {
+    id: 'systems',
+    title: 'Systems',
+    connectsTo: ['frontend', 'ai'],
+    tech: ['Node', 'Docker', 'PHP'],
+    fragments: [
+      { title: 'Designing API boundaries' },
+      { title: 'Structuring data flow' },
+      { title: 'Connecting services' },
+    ],
+  },
+  {
+    id: 'workflow',
+    title: 'Workflow',
+    connectsTo: ['systems', 'frontend'],
+    tech: ['Git', 'GitHub', 'Bitbucket'],
+    fragments: [
+      { title: 'Iterative development process' },
+      { title: 'Safe change management' },
+      { title: 'Collaboration structure' },
+    ],
+  },
+  {
+    id: 'frontend',
+    title: 'Frontend',
+    connectsTo: ['systems', 'ai'],
+    tech: ['React', 'TypeScript', 'Vite'],
+    fragments: [
+      { title: 'Building UI systems' },
+      { title: 'Designing interaction flow' },
+      { title: 'Balancing structure & feel' },
+    ],
+  },
+  {
+    id: 'ai',
+    title: 'AI & Automation',
+    connectsTo: ['systems', 'frontend'],
+    tech: ['Cursor', 'OpenAI'],
+    fragments: [
+      { title: 'Integrating AI into workflows' },
+      { title: 'Prompt-driven development' },
+      { title: 'Evaluating outputs & behavior' },
+    ],
+  },
+  {
+    id: 'logic',
+    title: 'Problem Solving',
+    connectsTo: ['systems', 'frontend', 'ai'],
+    tech: ['TypeScript', 'Figma'],
+    fragments: [
+      { title: 'Breaking down complex problems' },
+      { title: 'Designing algorithms & rules' },
+      { title: 'Making systems predictable' },
+    ],
+  },
+];
+
 export const selectedWorkIntro = {
-  kicker: 'Selected work',
-  title: 'Worth opening first',
+  kicker: 'How I work',
+  title: 'Thinking map',
   description:
-    'A short list — not everything I’ve built, just the pieces that show how I work.',
+    'A loose map of where my head goes — related areas, not a roadmap. Hover a topic to see what tends to connect.',
 };
 
 export const aboutSnippetAside = {

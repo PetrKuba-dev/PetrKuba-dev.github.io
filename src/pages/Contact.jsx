@@ -25,7 +25,7 @@ export default function Contact() {
           className="max-w-2xl"
         >
           <p className="site-kicker mb-0 max-w-none py-0.5 text-muted">{contactPage.kicker}</p>
-          <h1 className="site-section-title mt-3 text-4xl md:text-5xl">{contactPage.title}</h1>
+          <h1 className="site-section-title mt-3 text-4xl md:text-5xl lg:-translate-x-10 md:-translate-x-5 -translate-x-2">{contactPage.title}</h1>
           <p className="site-body site-prose-measure mt-6 md:text-xl">{contactPage.lead}</p>
         </motion.header>
 

@@ -32,7 +32,7 @@ export default function Work() {
           className="max-w-2xl border-b border-border pb-12"
         >
           <p className="site-kicker mb-0 max-w-none py-0.5 text-muted">{workPageIntro.kicker}</p>
-          <h1 className="site-section-title mt-3 text-4xl md:text-5xl">{workPageIntro.title}</h1>
+          <h1 className="site-section-title mt-3 text-4xl md:text-5xl lg:-translate-x-10 md:-translate-x-5 -translate-x-2">{workPageIntro.title}</h1>
           <p className="site-body site-prose-measure mt-5">{workPageIntro.description}</p>
         </motion.header>
 
@@ -42,8 +42,8 @@ export default function Work() {
           initial="hidden"
           animate="visible"
         >
-          {workProjects.map((project) => (
-            <motion.li key={project.id} variants={row}>
+          {workProjects.map((project, index) => (
+            <motion.li key={project.id} variants={row} className={index % 2 === 0 ? 'md:mr-4 lg:mr-10' : 'md:ml-4 lg:ml-8'}>
               <article className="group site-work-card relative">
                 <div className="flex min-w-0 flex-1 flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-10">
                   <div className="min-w-0 flex-1">

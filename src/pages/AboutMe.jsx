@@ -25,7 +25,7 @@ export default function AboutMe() {
           className="max-w-3xl border-b border-border pb-12"
         >
           <p className="site-kicker mb-0 max-w-none py-0.5 text-muted">{aboutPage.kicker}</p>
-          <h1 className="site-section-title mt-3 text-4xl md:text-5xl">{aboutPage.title}</h1>
+          <h1 className="site-section-title mt-3 text-4xl md:text-5xl lg:-translate-x-10 md:-translate-x-5 -translate-x-2">{aboutPage.title}</h1>
           <p className="site-body-strong site-prose-measure mt-6">{aboutPage.lead}</p>
         </motion.header>
 

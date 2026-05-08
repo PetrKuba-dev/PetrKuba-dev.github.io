@@ -23,7 +23,7 @@ export default function About() {
         >
           <h2
             id="about-snippet-heading"
-            className="site-section-title mt-0 text-3xl sm:mt-1 sm:text-4xl md:text-5xl"
+            className="site-section-title mt-0 text-3xl sm:mt-1 sm:text-4xl md:text-5xl lg:-translate-x-10 md:-translate-x-5 -translate-x-2"
           >
             In a nutshell
           </h2>
