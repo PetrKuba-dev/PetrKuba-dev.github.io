@@ -1,10 +1,8 @@
 /** Long-form about copy for /about-me — Petr Kuba. */
 
-import { person } from './homeContent';
-
 export const aboutPage = {
   kicker: 'About',
-  title: `A bit more about ${person.firstName}`,
+  title: 'A bit more about Petr',
   lead:
     'I’m a developer and designer who keeps one foot in code and the other in how things look and read — including the math-flavoured bits that don’t fit in a ticket.',
   sections: [

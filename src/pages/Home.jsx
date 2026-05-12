@@ -9,7 +9,7 @@ export default function Home() {
       <div className="relative z-10 flex flex-col">
         <Hero />
         <SelectedWork />
-        <About />
+        {/* <About /> */}
         <ContactCTA />
       </div>
     </div>

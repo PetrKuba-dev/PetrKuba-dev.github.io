@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 
-import { workPageIntro, workProjects } from '../data/workProjects';
+import { useLocale } from '../i18n/LocaleProvider.jsx';
 
 const container = {
   hidden: { opacity: 0 },
@@ -22,6 +22,9 @@ const row = {
 };
 
 export default function Work() {
+  const { workProjects: workBundle, localizedPath, ui } = useLocale();
+  const { workPageIntro, workProjects: projects } = workBundle;
+
   return (
     <div className="site-page-pad">
       <div className="mx-auto max-w-6xl">
@@ -42,7 +45,7 @@ export default function Work() {
           initial="hidden"
           animate="visible"
         >
-          {workProjects.map((project, index) => (
+          {projects.map((project, index) => (
             <motion.li key={project.id} variants={row} className={index % 2 === 0 ? 'md:mr-4 lg:mr-10' : 'md:ml-4 lg:ml-8'}>
               <article className="group site-work-card relative">
                 <div className="flex min-w-0 flex-1 flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-10">
@@ -70,7 +73,7 @@ export default function Work() {
                       /{project.slug}
                     </span>
                     <span className="inline-flex items-center gap-1 font-sans text-sm font-medium text-muted transition-colors group-hover:text-accent">
-                      Case study soon
+                      {ui.workPage.caseStudySoon}
                       <ArrowUpRight className="h-4 w-4" aria-hidden />
                     </span>
                   </div>
@@ -86,9 +89,9 @@ export default function Work() {
           transition={{ delay: 0.35, duration: 0.4 }}
           className="site-body mt-14 text-sm"
         >
-          Want the short list first?{' '}
-          <NavLink to="/#selected-work" className="site-text-link">
-            Back to homepage highlights
+          {ui.workPage.teaser}{' '}
+          <NavLink to={localizedPath('/#selected-work')} className="site-text-link">
+            {ui.workPage.backHome}
           </NavLink>
         </motion.p>
       </div>

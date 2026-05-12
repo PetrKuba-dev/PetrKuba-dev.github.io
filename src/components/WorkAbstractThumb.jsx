@@ -12,8 +12,8 @@ export default function WorkAbstractThumb({ variant = 0, embedded = false }) {
     return (
       <div className={base} aria-hidden>
         <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgb(184_92_58/0.18)_48%,transparent_56%)]" />
-        <div className="absolute inset-0 opacity-[0.35] bg-[radial-gradient(circle_at_18%_22%,rgb(44_40_36/0.14)_0,transparent_42%),radial-gradient(circle_at_88%_78%,rgb(184_92_58/0.2)_0,transparent_38%)]" />
-        <div className="absolute bottom-3 left-3 right-3 top-3 rounded-md border border-ink/10 bg-paper/25" />
+        <div className="absolute inset-0 opacity-[0.35] bg-[radial-gradient(circle_at_18%_22%,color-mix(in_srgb,var(--color-surface-inverse)_14%,transparent)_0,transparent_42%),radial-gradient(circle_at_88%_78%,color-mix(in_srgb,var(--color-accent)_20%,transparent)_0,transparent_38%)]" />
+        <div className="absolute bottom-3 left-3 right-3 top-3 rounded-md border border-surface-inverse/10 bg-paper/25" />
       </div>
     );
   }
@@ -24,8 +24,8 @@ export default function WorkAbstractThumb({ variant = 0, embedded = false }) {
         <div
           className="absolute inset-0 opacity-[0.45]"
           style={{
-            backgroundImage: `linear-gradient(rgb(44 40 36 / 0.06) 1px, transparent 1px),
-              linear-gradient(90deg, rgb(44 40 36 / 0.06) 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(color-mix(in srgb, var(--color-ink) 8%, transparent) 1px, transparent 1px),
+              linear-gradient(90deg, color-mix(in srgb, var(--color-ink) 8%, transparent) 1px, transparent 1px)`,
             backgroundSize: '22px 22px',
           }}
         />
@@ -37,9 +37,9 @@ export default function WorkAbstractThumb({ variant = 0, embedded = false }) {
 
   return (
     <div className={base} aria-hidden>
-      <div className="absolute inset-0 bg-gradient-to-br from-accent/30 via-paper-deep to-ink/12" />
+      <div className="absolute inset-0 bg-gradient-to-br from-accent/30 via-paper-deep to-surface-inverse/12" />
       <div className="absolute -right-6 -top-10 h-32 w-32 rotate-12 rounded-3xl border border-accent/40 bg-accent/10" />
-      <div className="absolute bottom-2 left-4 h-16 w-16 rounded-full bg-ink/10 blur-xl" />
+      <div className="absolute bottom-2 left-4 h-16 w-16 rounded-full bg-surface-inverse/10 blur-xl" />
     </div>
   );
 }

@@ -2,11 +2,12 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
 import { ArrowDownRight } from 'lucide-react';
-import ElasticFieldGridBackground from '../components/ElasticFieldGridBackground';
+// import ElasticFieldGridBackground from '../components/ElasticFieldGridBackground';
 
 
 import HomeStickyKicker from '../components/HomeStickyKicker';
-import { heroAside, person, siteIntro } from '../data/homeContent';
+import { useLocale } from '../i18n/LocaleProvider.jsx';
+import { useTheme } from '../theme/ThemeProvider.jsx';
 
 function randomBetween(min, max) {
   return min + Math.random() * (max - min);
@@ -85,9 +86,9 @@ const fadeUp = {
   }),
 };
 
-// const ElasticFieldGridBackground = lazy(() =>
-//   import('../components/ElasticFieldGridBackground'),
-// );
+const ElasticFieldGridBackground = lazy(() =>
+  import('../components/ElasticFieldGridBackground'),
+);
 
 /** Wait until hero stagger motion settles before fetching the field chunk (approx. max delay + duration). */
 const FIELD_DEFER_MS = 1150;
@@ -114,6 +115,9 @@ function useHeroElasticFieldIsStatic() {
 }
 
 export default function Hero() {
+  const { isDark } = useTheme();
+  const { homeContent, localizedPath, ui } = useLocale();
+  const { person, siteIntro, heroAside } = homeContent;
   const [fieldReady, setFieldReady] = useState(false);
   /** RAF canvas loop starts after opacity fade-in completes — saves main-thread work during intro. */
   const [fieldLoopEnabled, setFieldLoopEnabled] = useState(false);
@@ -146,29 +150,29 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="hp-hero-pad relative" aria-labelledby="hero-heading">
+    <section id="hero" className="hp-hero-pad relative" aria-labelledby="hero-heading">
       {fieldReady && (
-        <div>
+        <Suspense>
           {/* Outer shell fills the hero; inner motion stays `relative` + `h-full` for stable field sizing. */}
-          <div className="pointer-events-none absolute inset-0 z-[1] min-h-0 w-full overflow-visible">
+          <div className="pointer-events-none   absolute inset-0 z-[1] min-h-0 w-full overflow-visible">
             <motion.div
               className="relative z-[1] h-full min-h-0 w-full overflow-visible"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-              onAnimationComplete={() => setFieldLoopEnabled(true)}
+              transition={{ duration: 1.3, ease: [0.22, 1, 0.36, 1] }}
+              onAnimationStart={() => setFieldLoopEnabled(true)}
             >
               {fieldIsStatic ? (
                 <ElasticFieldGridBackground
                   className="z-[1]"
-                  cellSize={80}
+                  cellSize={50}
                   maxLinkDistance={150}
                   maxNeighbors={6}
-                  jitterFraction={5}
                   mouseInfluence={false}
                   isStatic={false}
                   runLoop={fieldLoopEnabled}
                   maxDpr={3}
+                  isDark={isDark}
                 />
               ) : (
                 <ElasticFieldGridBackground
@@ -176,11 +180,12 @@ export default function Hero() {
                   isStatic={false}
                   runLoop={fieldLoopEnabled}
                   maxDpr={1.25}
+                  isDark={isDark}
                 />
               )}
             </motion.div>
           </div>
-        </div>
+        </Suspense>
       )}
       <div className="pointer-events-none absolute inset-0 z-[2] overflow-hidden" aria-hidden>
         <div className="absolute -left-28 top-8 h-72 w-72 rounded-full bg-accent/15 blur-3xl" />
@@ -196,7 +201,9 @@ export default function Hero() {
           animate: 'visible',
         }}
       >
-        {person.fullName} — portfolio
+        {person.fullName}
+        {ui.hero.stickyKickerEmDash}
+        {ui.hero.stickyKickerTail}
       </HomeStickyKicker>
 
       <div className="relative z-10 mx-auto max-w-6xl">
@@ -208,12 +215,12 @@ export default function Hero() {
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className="font-sans text-5xl font-semibold leading-[1.05] tracking-[-0.03em] text-ink sm:leading-[1.04] md:text-6xl md:leading-[1.03] lg:text-7xl lg:leading-[1.02]"
+              className="font-sans text-5xl font-semibold leading-[1.05] tracking-[-0.03em] text-ink sm:leading-[1.04] md:text-7xl md:leading-[1.03] lg:text-8xl lg:leading-[1.02]"
             >
               <span className="block">{person.firstName}</span>
               <span className="mt-1 block sm:mt-2">{person.lastName}</span>
             </motion.h1>
-            <motion.div
+            {/* <motion.div
               custom={2}
               variants={fadeUp}
               initial="hidden"
@@ -223,14 +230,14 @@ export default function Hero() {
               <span className="hp-hero-prompt" aria-hidden>
                 ~
               </span>
-              {/* <TypewriterLine text={siteIntro.roleLine} className="hp-hero-role-line relative" /> */}
-            </motion.div>
+              <TypewriterLine text={siteIntro.roleLine} className="hp-hero-role-line relative" />
+            </motion.div> */}
             <motion.p
               custom={4}
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className="site-body site-prose-measure mt-[2rem] sm:mt-[3rem]"
+              className="site-body site-prose-measure mt-[2rem] sm:mt-[10rem]"
             >
               {siteIntro.lead}
             </motion.p>
@@ -242,12 +249,12 @@ export default function Hero() {
               animate="visible"
               className="mt-10 flex flex-wrap items-center gap-4"
             >
-              <NavLink to="/work" className="site-btn-primary">
-                Selected work
+              <NavLink to={localizedPath('/work')} className="site-btn-primary">
+                {ui.hero.selectedWorkCta}
                 <ArrowDownRight className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
               </NavLink>
               <a href="#selected-work" className="site-text-link-subtle">
-                Jump to highlights
+                {ui.hero.jumpToHighlights}
               </a>
             </motion.div>
           </div>

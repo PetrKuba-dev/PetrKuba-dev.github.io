@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Github, Mail } from 'lucide-react';
 
-import { contactPage } from '../data/contactPage';
+import { useLocale } from '../i18n/LocaleProvider.jsx';
 
 const cardMotion = {
   hidden: { opacity: 0, y: 14 },
@@ -13,6 +13,7 @@ const cardMotion = {
 };
 
 export default function Contact() {
+  const { contactPage, ui } = useLocale();
   const mailto = `mailto:${contactPage.email}`;
 
   return (
@@ -42,11 +43,11 @@ export default function Contact() {
               <Mail className="h-5 w-5" aria-hidden />
             </div>
             <div>
-              <p className="site-kicker mb-0 max-w-none py-0 text-muted">Email</p>
+              <p className="site-kicker mb-0 max-w-none py-0 text-muted">{ui.contactPage.emailKicker}</p>
               <p className="mt-2 break-all font-sans text-lg font-medium text-ink transition-colors group-hover:text-accent">
                 {contactPage.email}
               </p>
-              <p className="site-body mt-3 text-sm">Prefer long threads and links over calendar gymnastics.</p>
+              <p className="site-body mt-3 text-sm">{ui.contactPage.emailHint}</p>
             </div>
           </motion.a>
 
@@ -68,7 +69,7 @@ export default function Contact() {
               <p className="mt-2 font-sans text-lg font-medium text-ink transition-colors group-hover:text-accent">
                 {contactPage.githubUrl.replace('https://', '')}
               </p>
-              <p className="site-body mt-3 text-sm">Code, experiments, and things worth diffing.</p>
+              <p className="site-body mt-3 text-sm">{ui.contactPage.githubHint}</p>
             </div>
           </motion.a>
         </div>

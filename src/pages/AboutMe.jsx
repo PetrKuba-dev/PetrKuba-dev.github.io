@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
-import { aboutPage } from '../data/aboutPage';
+import { useLocale } from '../i18n/LocaleProvider.jsx';
 
 const sectionMotion = {
   hidden: { opacity: 0, y: 18 },
@@ -14,6 +14,8 @@ const sectionMotion = {
 };
 
 export default function AboutMe() {
+  const { aboutPage, localizedPath, ui } = useLocale();
+
   return (
     <div className="site-page-pad">
       <div className="mx-auto max-w-6xl">
@@ -70,8 +72,8 @@ export default function AboutMe() {
               initial="hidden"
               animate="visible"
             >
-              <NavLink to="/contact" className="site-btn-primary">
-                Get in touch
+              <NavLink to={localizedPath('/contact')} className="site-btn-primary">
+                {ui.aboutPage.cta}
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </NavLink>
             </motion.div>
@@ -84,10 +86,9 @@ export default function AboutMe() {
             animate="visible"
             className="h-fit rounded-soft border border-border bg-paper-deep/50 p-6 lg:sticky lg:top-28"
           >
-            <p className="site-kicker mb-0 max-w-none py-0.5 text-muted">Colophon</p>
+            <p className="site-kicker mb-0 max-w-none py-0.5 text-muted">{ui.aboutPage.colophonKicker}</p>
             <p className="site-body mt-3 text-sm">
-              Built with React, Vite, Tailwind, and Framer Motion — front-end only for now, content in
-              plain JS modules so it stays easy to edit.
+              {ui.aboutPage.colophonBody}
             </p>
           </motion.aside>
         </div>

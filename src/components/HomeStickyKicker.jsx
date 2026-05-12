@@ -18,7 +18,7 @@ export default function HomeStickyKicker({ children, motionProps }) {
 
   return (
     <div className="site-kicker-strip z-30 mb-5 text-ink backdrop-blur-md">
-      <div className="mx-auto max-w-6xl">{inner}</div>
+      {inner}
     </div>
   );
 }

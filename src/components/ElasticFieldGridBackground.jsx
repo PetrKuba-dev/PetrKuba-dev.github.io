@@ -227,6 +227,7 @@ function bowAmount(midX, midY, animTime, timeScale, k, breatheAmp) {
  * @param {boolean} [props.runLoop]
  * @param {boolean} [props.isStatic]
  * @param {number} [props.maxDpr]
+ * @param {boolean} [props.isDark]
  */
 export default function ElasticFieldGridBackground({
   className = '',
@@ -238,12 +239,15 @@ export default function ElasticFieldGridBackground({
   runLoop = true,
   isStatic = false,
   maxDpr = 3,
+  isDark = false,
 }) {
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
   const rafRef = useRef(0);
   const runningRef = useRef(false);
   const reducedMotionRef = useRef(false);
+  /** False until IntersectionObserver reports the hero section intersects the viewport. */
+  const heroInViewRef = useRef(false);
   const runLoopRef = useRef(runLoop);
   runLoopRef.current = runLoop;
 
@@ -293,7 +297,7 @@ export default function ElasticFieldGridBackground({
 
     /** Same clock as the original noise-based field so motion feels familiar */
     /** Time scale for the animation. */
-    const timeScale = 0.00002;
+    const timeScale = 0.000018;
     /** Noise coordinate scale for the animation. */
     const noiseCoordScale = 1;
     /** Breathe amplitude for the animation. */
@@ -304,24 +308,24 @@ export default function ElasticFieldGridBackground({
      * Effective speed swings between (1 - waveAmp*0.1) and (1 + waveAmp*0.1) — at 10 the field
      * momentarily freezes when the wave bottoms out.
      */
-    const waveAmp = 100;
+    const waveAmp = 80;
     /** Wave frequency in cycles per ms — at 0.0002 the cycle lasts ≈ 5 seconds. */
     const waveFreq = 0.00005;
     /** Mouse radius in pixels. */
     const mouseRadiusPx = 100;
     /** Mouse strength for the animation. */
-    const mouseStrength = 0.5;
+    const mouseStrength = 0.6;
     /** Smoothed cursor follow rate (higher = less lag / inertia on the pull). */
-    const mouseFollowHz = 14;
+    const mouseFollowHz = 5;
     /** How fast pull influence fades when the pointer leaves (release inertia). */
     const mouseBlendHz = 10;
     /** Motion scale for the animation. */
     const motionScale = jitterFraction / 8;
 
     /** Stroke color for the animation. */
-    const strokeRgb = 'rgb(44, 40, 36)';
+    const strokeRgb = isDark ? 'rgb(227, 222, 214)' : 'rgb(44, 40, 36)';
     /** Dot fill color for the animation. */
-    const dotFill = 'rgba(44, 40, 36, 0.15)';
+    const dotFill = isDark ? 'rgba(227, 222, 214, 0.11)' : 'rgba(44, 40, 36, 0.15)';
 
     /** Position x array. */
     let posX = new Float32Array(0);
@@ -507,7 +511,7 @@ export default function ElasticFieldGridBackground({
        * default waveAmp=10 it swings between 0 (paused) and 2x (burst). The integrated
        * `(1 - cos)` form keeps wavyAnimTime monotonic, so motion never plays backwards.
        */
-      const wavePhase = animTime * waveFreq * Math.PI * 2;
+      const wavePhase = animTime * waveFreq * Math.PI * 2 - Math.PI / 2;
       const waveStrength = waveAmp * 0.1;
       const wavyAnimTime =
         animTime * 16 + (waveStrength / (waveFreq * Math.PI * 2)) * (1 - Math.cos(wavePhase));
@@ -526,7 +530,7 @@ export default function ElasticFieldGridBackground({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       /** Fill the canvas with a semi-transparent background. */
-      ctx.fillStyle = 'rgb(250 248 244 / 0.02)';
+      ctx.fillStyle = isDark ? 'rgb(22 20 18 / 0.02)' : 'rgb(250 248 244 / 0.02)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       /** Set the transform. */
@@ -696,6 +700,10 @@ export default function ElasticFieldGridBackground({
     function loop(tMs) {
       /** If the running reference is not current, return. */
       if (!runningRef.current) return;
+      if (!heroInViewRef.current) {
+        stopLoop();
+        return;
+      }
       /** If the time since the last draw is less than the minimum frame time, request an animation frame. */
       if (tMs - lastDrawMs < MIN_FRAME_MS) {
         rafRef.current = requestAnimationFrame(loop);
@@ -726,6 +734,7 @@ export default function ElasticFieldGridBackground({
       if (!runLoopRef.current) return;
       if (reducedMotionRef.current) return;
       if (document.hidden) return;
+      if (!heroInViewRef.current) return;
       startLoop();
     }
 
@@ -770,9 +779,11 @@ export default function ElasticFieldGridBackground({
     const sectionObs = wrap.closest('section');
     if (sectionObs) ro.observe(sectionObs);
 
+    const ioTarget = wrap.closest('section') ?? wrap;
     const io = new IntersectionObserver(
       ([entry]) => {
-        const vis = entry?.isIntersecting ?? true;
+        const vis = Boolean(entry?.isIntersecting);
+        heroInViewRef.current = vis;
         if (!vis) {
           stopLoop();
           return;
@@ -780,9 +791,9 @@ export default function ElasticFieldGridBackground({
         drawFrame(performance.now());
         tryStartLoop();
       },
-      { threshold: 0, rootMargin: '80px' },
+      { threshold: 0, rootMargin: '0px' },
     );
-    io.observe(wrap);
+    io.observe(ioTarget);
 
     function onMove(ev) {
       const proxy = wrap.closest('section') ?? wrap;
@@ -842,7 +853,16 @@ export default function ElasticFieldGridBackground({
         window.removeEventListener('blur', onLeave);
       }
     };
-  }, [cellSize, maxLinkDistance, maxNeighbors, jitterFraction, mouseInfluence, isStatic, maxDpr]);
+  }, [
+    cellSize,
+    maxLinkDistance,
+    maxNeighbors,
+    jitterFraction,
+    mouseInfluence,
+    isStatic,
+    maxDpr,
+    isDark,
+  ]);
 
   useEffect(() => {
     const e = engineRef.current;

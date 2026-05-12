@@ -1,9 +1,10 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
 
 import HomeStickyKicker from '../components/HomeStickyKicker';
-import { selectedWorkIntro, thinkingBlocks, thinkingMapEntry } from '../data/homeContent';
+import { useLocale } from '../i18n/LocaleProvider.jsx';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
 
 function collectUndirectedEdges(blocks) {
   const seen = new Set();
@@ -19,6 +20,10 @@ function collectUndirectedEdges(blocks) {
     }
   }
   return edges;
+}
+
+function edgeKey(from, to) {
+  return from < to ? `${from}:${to}` : `${to}:${from}`;
 }
 
 /** Soft curve between node centers — reads as a hint, not a diagram arrow. */
@@ -41,102 +46,165 @@ const container = {
   },
 };
 
-const item = {
-  hidden: { opacity: 0, y: 10 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] },
-  },
-};
+const SKILL_TIER_ORDER = { core: 0, mid: 1, edge: 2 };
+
+function skillTierClass(tier) {
+  return tier === 'core' || tier === 'mid' || tier === 'edge' ? tier : 'edge';
+}
 
 export default function SelectedWork() {
+  const { homeContent, localizedPath, ui } = useLocale();
+  const { selectedWorkIntro, thinkingBlocks, thinkingMapEntry, allSkills = [] } = homeContent;
+
+  const [skillsOpen, setSkillsOpen] = useState(false);
+  const [mapHoverId, setMapHoverId] = useState(null);
+  const [mapFocusId, setMapFocusId] = useState(null);
+  const [mapDisclosedId, setMapDisclosedId] = useState(null);
+
+  const sortedAllSkills = useMemo(() => {
+    return [...allSkills].sort((a, b) => {
+      const da = SKILL_TIER_ORDER[a.tier] ?? 99;
+      const db = SKILL_TIER_ORDER[b.tier] ?? 99;
+      if (da !== db) return da - db;
+      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    });
+  }, [allSkills]);
+
+  const entryEdges = useMemo(() => {
+    if (!thinkingMapEntry) return [];
+    return thinkingBlocks.map((b) => ({ from: thinkingMapEntry.id, to: b.id }));
+  }, [thinkingMapEntry, thinkingBlocks]);
+
+  const thinkingEdgePairs = useMemo(() => {
+    const blockPairs = collectUndirectedEdges(thinkingBlocks);
+    return [...blockPairs, ...entryEdges];
+  }, [thinkingBlocks, entryEdges]);
+
+  const visualHighlight = mapFocusId ?? mapHoverId ?? mapDisclosedId;
+
   const mapRef = useRef(null);
+  const sectionRef = useRef(null);
+  const svgRef = useRef(null);
   const nodeRefs = useRef({});
-  const [geom, setGeom] = useState({ w: 0, h: 0, edges: [] });
-  const [focusId, setFocusId] = useState(null);
+  const pathRefs = useRef({});
+
+  const [mapSize, setMapSize] = useState(null);
 
   const setNodeRef = useCallback((id, el) => {
     if (el) nodeRefs.current[id] = el;
     else delete nodeRefs.current[id];
   }, []);
 
-  const measure = useCallback(() => {
+  useEffect(() => {
+    if (!mapDisclosedId) return undefined;
+    const onPointerDown = (e) => {
+      const t = e.target;
+      if (t instanceof Node && mapRef.current?.contains(t)) return;
+      setMapDisclosedId(null);
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onPointerDown, true);
+  }, [mapDisclosedId]);
+
+  const syncPaths = useCallback(() => {
     const root = mapRef.current;
-    if (!root) return;
+    const svg = svgRef.current;
+    if (!root || !svg) return;
 
     const cr = root.getBoundingClientRect();
-    const w = cr.width;
-    const h = cr.height;
+    const w = Math.round(cr.width);
+    const h = Math.round(cr.height);
     if (w < 1 || h < 1) return;
 
-    const blockPairs = collectUndirectedEdges(thinkingBlocks);
-    const entryPairs = thinkingBlocks.map((b) => ({
-      from: thinkingMapEntry.id,
-      to: b.id,
-    }));
-    const pairs = [...blockPairs, ...entryPairs];
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
 
-    const edges = pairs
-      .map(({ from, to }) => {
-        const a = nodeRefs.current[from];
-        const b = nodeRefs.current[to];
-        if (!a || !b) return null;
-        const ar = a.getBoundingClientRect();
-        const br = b.getBoundingClientRect();
-        const x1 = ar.left + ar.width / 2 - cr.left;
-        const y1 = ar.top + ar.height / 2 - cr.top;
-        const x2 = br.left + br.width / 2 - cr.left;
-        const y2 = br.top + br.height / 2 - cr.top;
-        return { from, to, d: curvedPath(x1, y1, x2, y2) };
-      })
-      .filter(Boolean);
-
-    setGeom({ w, h, edges });
-  }, []);
+    for (const { from, to } of thinkingEdgePairs) {
+      const pathEl = pathRefs.current[edgeKey(from, to)];
+      if (!pathEl) continue;
+      const a = nodeRefs.current[from];
+      const b = nodeRefs.current[to];
+      if (!a || !b) continue;
+      const ar = a.getBoundingClientRect();
+      const br = b.getBoundingClientRect();
+      const x1 = ar.left + ar.width / 2 - cr.left;
+      const y1 = ar.top + ar.height / 2 - cr.top;
+      const x2 = br.left + br.width / 2 - cr.left;
+      const y2 = br.top + br.height / 2 - cr.top;
+      pathEl.setAttribute('d', curvedPath(x1, y1, x2, y2));
+    }
+  }, [thinkingEdgePairs]);
 
   useLayoutEffect(() => {
-    measure();
     const root = mapRef.current;
-    if (!root) return;
+    if (!root) return undefined;
 
-    const ro = new ResizeObserver(() => measure());
-    ro.observe(root);
-    const entryEl = nodeRefs.current[thinkingMapEntry.id];
-    if (entryEl) ro.observe(entryEl);
-    thinkingBlocks.forEach((b) => {
-      const el = nodeRefs.current[b.id];
-      if (el) ro.observe(el);
+    const measureSize = () => {
+      const cr = root.getBoundingClientRect();
+      const w = Math.round(cr.width);
+      const h = Math.round(cr.height);
+      if (w >= 1 && h >= 1) {
+        setMapSize((prev) => (prev?.w === w && prev?.h === h ? prev : { w, h }));
+      }
+    };
+
+    measureSize();
+    syncPaths();
+
+    const ro = new ResizeObserver(() => {
+      measureSize();
+      syncPaths();
     });
+    ro.observe(root);
 
-    window.addEventListener('resize', measure);
-    const t = window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(measure);
+    const onWinResize = () => {
+      measureSize();
+      syncPaths();
+    };
+    window.addEventListener('resize', onWinResize);
+
+    let postLayoutRaf = 0;
+    postLayoutRaf = requestAnimationFrame(() => {
+      measureSize();
+      syncPaths();
+      postLayoutRaf = requestAnimationFrame(() => {
+        measureSize();
+        syncPaths();
+        postLayoutRaf = 0;
+      });
     });
 
     return () => {
       ro.disconnect();
-      window.removeEventListener('resize', measure);
-      window.cancelAnimationFrame(t);
+      window.removeEventListener('resize', onWinResize);
+      if (postLayoutRaf) cancelAnimationFrame(postLayoutRaf);
     };
-  }, [measure]);
+  }, [syncPaths]);
 
-  const activate = useCallback((id) => {
-    setFocusId(id);
-  }, []);
+  useLayoutEffect(() => {
+    if (!mapSize?.w) return;
+    syncPaths();
+  }, [mapSize, syncPaths]);
 
-  const deactivate = useCallback(() => {
-    setFocusId(null);
-  }, []);
-
-  const onNodeBlur = useCallback((e) => {
+  const handleNodeMouseLeave = useCallback((e) => {
     const next = e.relatedTarget;
-    if (next && e.currentTarget.contains(next)) return;
-    setFocusId(null);
+    if (next instanceof Node && e.currentTarget.contains(next)) return;
+    setMapHoverId(null);
+  }, []);
+
+  const handleMapFocusLeave = useCallback((e) => {
+    const next = e.relatedTarget;
+    if (next && mapRef.current?.contains(next)) return;
+    setMapFocusId(null);
+  }, []);
+
+  const toggleDisclosure = useCallback((id) => {
+    if (typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches) return;
+    setMapDisclosedId((d) => (d === id ? null : id));
   }, []);
 
   return (
     <section
+      ref={sectionRef}
       id="selected-work"
       className="hp-section-selected-work hp-section-pad scroll-mt-24"
       aria-labelledby="selected-work-heading"
@@ -144,7 +212,7 @@ export default function SelectedWork() {
       <HomeStickyKicker>{selectedWorkIntro.kicker}</HomeStickyKicker>
 
       <div className="mx-auto max-w-6xl">
-        <div className="mb-12 max-w-2xl md:mb-14 lg:max-w-[42rem]">
+        <div className="mb-12 max-w-2xl md:mb-24 lg:max-w-[42rem]">
           <h2
             id="selected-work-heading"
             className="site-section-title mt-0 text-3xl sm:mt-1 sm:text-4xl md:text-5xl lg:-translate-x-10 md:-translate-x-5 -translate-x-2"
@@ -154,28 +222,88 @@ export default function SelectedWork() {
           <p className="site-body site-prose-measure mt-5 text-ink/90">{selectedWorkIntro.description}</p>
         </div>
 
+        {/* {sortedAllSkills.length > 0 ? (
+          <div className="hp-all-skills">
+            <div className="hp-all-skills__toggle-wrap">
+              <button
+                type="button"
+                id="all-skills-toggle"
+                className="hp-all-skills__toggle"
+                aria-expanded={skillsOpen}
+                aria-controls="all-skills-panel"
+                onClick={() => setSkillsOpen((o) => !o)}
+              >
+                {skillsOpen ? <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden /> : <ArrowLeft className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />}
+                {skillsOpen ? ui.workSection.allSkillsCollapse : ui.workSection.allSkillsExpand}
+              </button>
+            </div>
+            <AnimatePresence initial={false}>
+              {skillsOpen ? (
+                <motion.div
+                  key="all-skills-panel"
+                  id="all-skills-panel"
+                  role="region"
+                  aria-labelledby="all-skills-panel-title"
+                  initial={{ right: -20, opacity: 0 }}
+                  animate={{ right: 0, opacity: 1 }}
+                  exit={{ right: -20, opacity: 0 }}
+                  transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+                  className="pointer-events-auto w-full absolute z-20 overflow-hidden"
+                >
+                  <div className="hp-all-skills__panel-row mx-auto max-w-6xl w-full min-w-0">
+                    <div className="hp-all-skills__panel">
+                      <div className="hp-all-skills__panel-chrome" aria-hidden />
+                      <div className="hp-all-skills__panel-body">
+                        <p id="all-skills-panel-title" className="hp-all-skills__panel-eyebrow">
+                          {ui.workSection.allSkillsRegionLabel}
+                        </p>
+                        <ul className="hp-all-skills__cloud">
+                          {sortedAllSkills.map((s) => (
+                            <li key={s.name}>
+                              <span className={`hp-all-skills__label hp-all-skills__label--${skillTierClass(s.tier)}`}>
+                                {s.name}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </div>
+        ) : null} */}
+
         <div
           ref={mapRef}
-          className={`hp-thinking-map ${focusId ? 'hp-thinking-map--focus' : ''}`}
+          className={`hp-thinking-map transition-all duration-200 ${skillsOpen ? 'blur-md' : ''}`}
+          data-map-focus={visualHighlight || undefined}
         >
-          {geom.w > 0 && geom.h > 0 ? (
+          {mapSize && mapSize.w > 0 && mapSize.h > 0 ? (
             <svg
+              ref={svgRef}
               className="hp-thinking-map__svg"
-              viewBox={`0 0 ${geom.w} ${geom.h}`}
+              viewBox={`0 0 ${mapSize.w} ${mapSize.h}`}
               aria-hidden
               focusable="false"
             >
-              {geom.edges.map((e) => {
-                const touchesFocus =
-                  focusId && (e.from === focusId || e.to === focusId);
-                const lit = Boolean(touchesFocus);
-                const dim = Boolean(focusId && !touchesFocus);
+              {thinkingEdgePairs.map(({ from, to }) => {
+                const k = edgeKey(from, to);
+                const lit = Boolean(
+                  visualHighlight && (from === visualHighlight || to === visualHighlight),
+                );
+                const dim = Boolean(visualHighlight && !lit);
                 return (
                   <path
-                    key={`${e.from}-${e.to}`}
-                    d={e.d}
+                    key={k}
+                    ref={(el) => {
+                      if (el) pathRefs.current[k] = el;
+                      else delete pathRefs.current[k];
+                    }}
+                    d="M 0 0"
                     fill="none"
-                    className={`hp-thinking-map__edge ${lit ? 'hp-thinking-map__edge--lit' : ''} ${dim ? 'hp-thinking-map__edge--dim' : ''}`}
+                    className={`hp-thinking-map__edge transition-all duration-fast ${lit ? 'hp-thinking-map__edge--lit' : ''} ${dim ? 'hp-thinking-map__edge--dim' : ''}`}
                   />
                 );
               })}
@@ -189,85 +317,114 @@ export default function SelectedWork() {
             whileInView="visible"
             viewport={{ once: true, margin: '-60px' }}
           >
-            <motion.li
-              variants={item}
-              className="hp-thinking-map__cell hp-thinking-map__cell--entry"
-            >
-              <article
-                ref={(el) => setNodeRef(thinkingMapEntry.id, el)}
-                className={`hp-thinking-node hp-thinking-node--entry ${focusId === thinkingMapEntry.id ? 'hp-thinking-node--active' : ''} ${focusId && focusId !== thinkingMapEntry.id ? 'hp-thinking-node--muted' : ''}`}
-                aria-labelledby={`thinking-node-title-${thinkingMapEntry.id}`}
-                tabIndex={0}
-                // onMouseEnter={() => activate(thinkingMapEntry.id)}
-                // onMouseLeave={deactivate}
-                // onFocus={() => activate(thinkingMapEntry.id)}
-                // onBlur={onNodeBlur}
-              >
-                <div className="hp-thinking-node__chrome hp-thinking-node__chrome--entry" aria-hidden />
-                <p className="hp-thinking-entry__eyebrow font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
-                  Entry
-                </p>
-                <h3
-                  id={`thinking-node-title-${thinkingMapEntry.id}`}
-                  className="hp-thinking-node__title hp-thinking-entry__title font-sans text-lg font-semibold tracking-tight text-ink sm:text-xl md:text-2xl"
-                >
-                  {thinkingMapEntry.title}
-                </h3>
-                <p className="hp-thinking-entry__line site-body mt-2 text-sm text-ink/85">{thinkingMapEntry.line}</p>
-              </article>
-            </motion.li>
-
-            {thinkingBlocks.map((block) => (
-              <motion.li
-                key={block.id}
-                variants={item}
-                className={`hp-thinking-map__cell hp-thinking-map__cell--${block.id}`}
-              >
-                <article
-                  ref={(el) => setNodeRef(block.id, el)}
-                  className={`hp-thinking-node ${focusId === block.id ? 'hp-thinking-node--active' : ''} ${focusId && focusId !== block.id ? 'hp-thinking-node--muted' : ''}`}
-                  aria-labelledby={`thinking-node-title-${block.id}`}
+            {thinkingMapEntry ? (
+              <li className="hp-thinking-map__cell hp-thinking-map__cell--entry">
+                <motion.article
+                  ref={(el) => setNodeRef(thinkingMapEntry.id, el)}
+                  data-node-id={thinkingMapEntry.id}
+                  data-map-active={visualHighlight === thinkingMapEntry.id ? 'true' : undefined}
+                  className="hp-thinking-node hp-thinking-node--entry touch-none transition-all duration-fast"
+                  aria-labelledby={`thinking-node-title-${thinkingMapEntry.id}`}
                   tabIndex={0}
-                  onMouseEnter={() => activate(block.id)}
-                  onMouseLeave={deactivate}
-                  onFocus={() => activate(block.id)}
-                  onBlur={onNodeBlur}
+                  onMouseEnter={() => setMapHoverId(thinkingMapEntry.id)}
+                  onMouseLeave={handleNodeMouseLeave}
+                  onFocus={() => setMapFocusId(thinkingMapEntry.id)}
+                  onBlur={handleMapFocusLeave}
                 >
-                  <div className="hp-thinking-node__chrome" aria-hidden />
+                  <div className="hp-thinking-node__chrome hp-thinking-node__chrome--entry" aria-hidden />
+                  <p className="hp-thinking-entry__eyebrow font-mono text-[10px] font-semibold uppercase tracking-[0.18em]">
+                    {ui.workSection.entryEyebrow}
+                  </p>
                   <h3
-                    id={`thinking-node-title-${block.id}`}
-                    className="hp-thinking-node__title font-sans text-lg font-semibold tracking-tight text-ink sm:text-xl md:text-2xl"
+                    id={`thinking-node-title-${thinkingMapEntry.id}`}
+                    className="hp-thinking-node__title hp-thinking-entry__title font-sans text-lg font-semibold tracking-tight text-ink sm:text-xl md:text-2xl"
                   >
-                    {block.title}
+                    {thinkingMapEntry.title}
                   </h3>
-                  {block.tech?.length ? (
-                    <ul className="hp-thinking-node__tech" aria-label="Tools & technologies">
-                      {block.tech.map((t) => (
-                        <li key={`${block.id}-${t}`}>
-                          <span className="hp-thinking-node__tech-pill">{t}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  <ul className="hp-thinking-node__items">
-                    {block.fragments.map((f) => (
-                      <li key={`${block.id}-${f.title}`} className="hp-thinking-node__item">
-                        <span className="hp-thinking-node__prefix" aria-hidden>
-                          ·
-                        </span>
-                        <span className="hp-thinking-node__text">{f.title}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-              </motion.li>
-            ))}
+                  <p className="hp-thinking-entry__line site-body mt-2 text-sm text-ink/85">{thinkingMapEntry.line}</p>
+                </motion.article>
+              </li>
+            ) : null}
+
+            {thinkingBlocks.map((block, blockIndex) => {
+              const detailsOpen = visualHighlight === block.id;
+              return (
+                <li
+                  key={block.id}
+                  className={`hp-thinking-map__cell hp-thinking-map__cell--${block.id}`}
+                >
+                  <motion.article
+                    ref={(el) => setNodeRef(block.id, el)}
+                    data-node-id={block.id}
+                    data-map-active={detailsOpen ? 'true' : undefined}
+                    className={`hp-thinking-node hp-thinking-node--topic touch-none transition-all duration-fast ${mapDisclosedId === block.id ? 'hp-thinking-node--disclosed' : ''}`}
+                    aria-labelledby={`thinking-node-title-${block.id}`}
+                    aria-expanded={detailsOpen}
+                    tabIndex={0}
+                    onMouseEnter={() => setMapHoverId(block.id)}
+                    onMouseLeave={handleNodeMouseLeave}
+                    onFocus={() => setMapFocusId(block.id)}
+                    onBlur={handleMapFocusLeave}
+                    onClick={() => toggleDisclosure(block.id)}
+                  >
+                    <div className="hp-thinking-node__chrome" aria-hidden />
+                    <div className="hp-thinking-node__head">
+                      <span className="hp-thinking-node__index" aria-hidden>
+                        {String(blockIndex + 1).padStart(2, '0')}
+                      </span>
+                      <h3
+                        id={`thinking-node-title-${block.id}`}
+                        className="hp-thinking-node__title font-sans text-lg font-semibold tracking-tight text-ink sm:text-xl md:text-2xl"
+                      >
+                        {block.title}
+                      </h3>
+                    </div>
+                    {block.summary ? (
+                      <p className="hp-thinking-node__summary site-body text-sm text-ink/80">{block.summary}</p>
+                    ) : null}
+                    <div
+                      className="hp-thinking-node__collapsible"
+                      role="group"
+                      aria-labelledby={`thinking-node-title-${block.id}`}
+                      aria-hidden={!detailsOpen}
+                    >
+                      {block.tech?.length ? (
+                        <ul className="hp-thinking-node__tech" aria-label={ui.workSection.toolsAriaLabel}>
+                          {block.tech.map((t) => (
+                            <li key={`${block.id}-${t}`}>
+                              <span className="hp-thinking-node__tech-pill">{t}</span>
+                              {/* {block.tech.indexOf(t) < block.tech.length - 1 ? <span className="px-2 text-ink/50" aria-hidden>·</span> : null} */}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                      {/* <ul className="hp-thinking-node__items">
+                        {block.tech.map((f) => (
+                          // <li key={`${block.id}-${f.title}`} className="hp-thinking-node__item">
+                          //   <span className="hp-thinking-node__prefix" aria-hidden>
+                          //     ·
+                          //   </span>
+                          //   <span className="hp-thinking-node__text">{f.title}</span>
+                          // </li>
+                        ))}
+                      </ul> */}
+                    </div>
+                  </motion.article>
+                </li>
+              );
+            })}
           </motion.ul>
         </div>
 
+        {selectedWorkIntro.judgmentNote ? (
+          <p className="hp-thinking-map__judgment site-body mx-auto mt-10 max-w-2xl text-sm text-muted md:mt-12">
+            {selectedWorkIntro.judgmentNote}
+          </p>
+        ) : null}
+
         <p className="mt-12 text-center font-sans text-sm text-muted md:mt-14 md:text-left">
-          <NavLink to="/work" className="site-text-link">
-            See project write-ups
+          <NavLink to={localizedPath('/work')} className="site-text-link">
+            {ui.workSection.seeWriteups}
           </NavLink>
         </p>
       </div>
